@@ -10,12 +10,22 @@ import java.awt.Rectangle;
 import java.util.Iterator;
 import java.util.List;
 
+import org.lwjgl.glfw.GLFW;
+import org.lwjgl.glfw.GLFWMouseButtonCallback;
+import org.lwjgl.opengl.GL11;
+
+import MouseGame.Box;
+import MouseGame.Bullet;
 import edu.utc.game.Scene;
 import edu.utc.game.SimpleMenu;
+import edu.utc.game.XYPair;
 
 public class SimpleGame extends Game implements Scene {
 	
 	private static java.util.Random rand=new java.util.Random();
+	private boolean gotClick=false;
+	 private List<Box> boxes;
+	private Box currBox;
 
 	
 	public static void main(String[] args)
@@ -45,19 +55,34 @@ public class SimpleGame extends Game implements Scene {
 	
 	public SimpleGame()
 	{
-		// inherited from the Game class, this sets up the window and allows us to access
-		// Game.ui
-		initUI(640, 480, "DemoGame");
-
-		// screen clear is black (this could go in drawFrame if you wanted it to change
-		glClearColor(.0f, .0f, .0f, .0f);
-		
-		
-		targets = new java.util.LinkedList<GameObject>();
-		
-		player = new Player();
-		spawnTargets(10);
-		
+		initUI(640,480,"Simple Game");
+    	GL11.glClearColor(1,1,1,0);
+    	boxes = new java.util.LinkedList<Box>();
+		currBox = new Box();
+    	bullets=new java.util.LinkedList<Bullet>();
+    	Game.ui.showMouseCursor(true);
+    	GLFW.glfwSetMouseButtonCallback(Game.ui.getWindow(), 
+				new GLFWMouseButtonCallback()
+				{
+					public void invoke(long window, int button, int action, int mods)
+					{
+						if (button==1 && action==GLFW.GLFW_PRESS)
+						{
+							System.out.println("bullet");
+							// right button press --> save a green box at the current location
+							XYPair<Integer> lastClick = Game.ui.getMouseLocation();
+							bullets.add(new Bullet(lastClick.x,lastClick.y));
+							
+							
+							Box nb = new Box();
+							nb.setLocation(lastClick.x,  lastClick.y);
+							nb.setColor(0, 1, 0);
+							boxes.add(nb);
+							gotClick=true;
+						}
+					}
+			
+				});
 		
 	}
 	
@@ -75,42 +100,28 @@ public class SimpleGame extends Game implements Scene {
 	
 	
 	public Scene drawFrame(int delta) {
-		glClearColor(1f, 1f, 1f, 1f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
-
-		player.update(delta);
-
-		// update all targets and player object
-		for (GameObject o : targets)
+GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+        
+        for(Bullet b:bullets )
+        {
+        	b.update(delta);
+        	b.draw();
+        }
+        if (gotClick)
 		{
-			o.update(delta);
+			System.out.println("detected a click event"); //checks if the mouse if clicked
+			
 		}
-		
-		// check for deactivated objects
-		Iterator<GameObject> it = targets.iterator();
-		while (it.hasNext()) {
-			GameObject o = it.next();
-			if (! o.isActive())
-			{
-				it.remove();
-			}
-		}
-		
-		// if all targets have been destroyed, spawn some more
-		if (targets.isEmpty()) {
-			spawnTargets(10);
-		}
-		
-		// draw existing targets
-		for (GameObject o : targets)
+        
+        if (Game.ui.mouseButtonIsPressed(0))
 		{
-			o.draw();
+			currBox.setColor(0,0,0);//set colour to black
+			boxes.add(currBox);
+			currBox = new Box();
 		}
 		
-		// draw the player last so it will appear on top of targets
-		player.draw();
-		
-		return this;
+        return this;
+    }
 	}
 	
 	public static enum DIR { LEFT, RIGHT, UP, DOWN };
