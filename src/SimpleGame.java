@@ -93,12 +93,14 @@ public class SimpleGame extends Game implements Scene {
         if (gotClick)
 		{
 			System.out.println("detected a click event"); //checks if the mouse if clicked
+			gotClick=false;
 			long finish = System.nanoTime();
 			long timeElapsed = finish - start;
 			System.out.println(timeElapsed);
+			GotClicks++;
 			if(GotClicks>=5)
 			{
-				//return to victory screen
+				System.out.println("Win");
 			}
 			
 		}
@@ -108,32 +110,25 @@ public class SimpleGame extends Game implements Scene {
     }
 	
 	
-	public Scene draw()
+	
+	public void onMouseEvent(int button,int action, int mods)
 	{
-	Game.ui.showMouseCursor(true);
-	GLFW.glfwSetMouseButtonCallback(Game.ui.getWindow(), 
-			new GLFWMouseButtonCallback()
+		//System.out.println("Button: "+button);
+		//System.out.println("Action: "+action);
+		if (button==0 && action==1)
+		{
+			
+			gotClick=true;
+			
+			if(GotClicks>=5)
 			{
-				public void invoke(long window, int button, int action, int mods)
-				{
-					if (button==1 && action==GLFW.GLFW_PRESS)
-					{
-						
-						gotClick=true;
-						
-						if(GotClicks>=5)
-						{
-							System.out.println("test");
-						}
-						
-				
-					}
-				}
-		
+				System.out.println("test");
 			}
-	
-	
+		}
+			
 	}
+	
+	
 	
 }
 	
