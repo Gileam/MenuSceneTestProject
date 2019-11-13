@@ -1,4 +1,5 @@
 import edu.utc.game.Game;
+
 import edu.utc.game.GameObject;
 
 import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
@@ -19,13 +20,14 @@ import org.lwjgl.opengl.GL11;
 import edu.utc.game.Scene;
 import edu.utc.game.SimpleMenu;
 import edu.utc.game.XYPair;
-
+import edu.utc.game.Sound;
 public class TempFile extends Game implements Scene {
 	
 	//private static java.util.Random rand=new java.util.Random();
-	private boolean gotClick=false;
-	// private List<Box> boxes;
+	private boolean gotClick=false; 
+ // private List<Box> boxes;
 	//private Box currBox;
+	 Sound theSound;
 	
 	public static void main(String [] arg)
 	{
@@ -36,7 +38,7 @@ public class TempFile extends Game implements Scene {
 	
 		SimpleGame game=new SimpleGame();
 		game.registerGlobalCallbacks();
-
+		//theSound=new Sound("res/sound.wav");
 		//SimpleMenu menu = new SimpleMenu();
 		//menu.addItem(new SimpleMenu.SelectableText(20, 20, 20, 20, "Launch Game", 1, 0, 0, 1, 1, 1), game);
 		//menu.addItem(new SimpleMenu.SelectableText(20, 60, 20, 20, "Exit", 1, 0, 0, 1, 1, 1), null);
@@ -54,6 +56,7 @@ public class TempFile extends Game implements Scene {
 	int GotClicks=0;
 	public SimpleGame()
 	{
+		theSound=new Sound("res/sound.wav");
 		initUI(640,480,"Simple Game");
     	GL11.glClearColor(1,1,1,0);
     	int GotClicks=0;
@@ -93,6 +96,7 @@ public class TempFile extends Game implements Scene {
         if (gotClick)
 		{
 			System.out.println("detected a click event"); //checks if the mouse if clicked
+			theSound.play();
 			gotClick=false;
 			long finish = System.nanoTime();
 			long timeElapsed = finish - start;
@@ -101,6 +105,13 @@ public class TempFile extends Game implements Scene {
 			if(GotClicks>=5)
 			{
 				System.out.println("Win");
+				if(GotClicks>=5)
+				{
+					theSound.play();
+					return this;
+				}
+				//theSound.play();
+				
 			}
 			
 		}
@@ -123,6 +134,7 @@ public class TempFile extends Game implements Scene {
 			if(GotClicks>=5)
 			{
 				System.out.println("test");
+				
 			}
 		}
 			
