@@ -10,29 +10,32 @@ import edu.utc.game.Sound;
 import edu.utc.game.Text;
 
 public class SimpleGame extends Game implements Scene {
-	//Game Objects
+	//Score Variable
 	static int score;
+	//Time tracking variables.
 	static int time;
 	static long start;
 	static long elasped = 0;
+	//Needed to pause the game
 	boolean pauseGame = false;
-	//Scenes
+	//Scenes. Menu is the main menu, pause is the pause menu, and win is the victory screen.
 	static Scenes.MainMenu menu = new Scenes.MainMenu(1,1,1);
 	static Scenes.MainMenu pause = new Scenes.MainMenu(1,1,1);
+	static Scenes.MainMenu win = new Scenes.MainMenu(0,1,1);
+	//Objects display text in win screen
 	static Scenes.SelectableText scoreInMenu = null;
+	static Scenes.SelectableText timeInMenu = null;
+	//Objects display text in main game.
 	static updatableText scoreText = null;
 	static updatableText timeText = null;
 	
 	public static void main(String[] args)
 	{
-	
-		// construct a DemoGame object and launch the game loop
-		// DemoGame game = new DemoGame();
-		// game.gameLoop();
-	
+		//Constructing menus and game
 		SimpleGame game=new SimpleGame();
 		game.registerGlobalCallbacks();
 		
+		//Pseudo scenes that run code between scenes
 		initScene launcher = new initScene(game);
 		resumeTime timer = new resumeTime(game);
 		
@@ -40,17 +43,26 @@ public class SimpleGame extends Game implements Scene {
 		menu.addItem(new Scenes.SelectableText(20, 60, 20, 20, "Exit", 1, 0, 0, 0, 0, 0), null);
 		menu.select(0);
 
+		scoreInMenu = new Scenes.SelectableText(500, 20, 20, 20, "", 0, 0, 0, 0, 0, 0);
+		timeInMenu = new Scenes.SelectableText(500, 60, 20, 20, "", 0, 0, 0, 0, 0, 0);
 		
 		pause.addItem(new Scenes.SelectableText(20, 20, 20, 20, "Resume", 1, 0, 0, 0, 0, 0), timer);
 		pause.addItem(new Scenes.SelectableText(20, 60, 20, 20, "Quit to Main Menu", 1, 0, 0, 0, 0, 0), menu);
 		pause.addItem(new Scenes.SelectableText(20, 100, 20, 20, "Quit to Desktop", 1, 0, 0, 0, 0, 0), null);
-		scoreInMenu = new Scenes.SelectableText(500, 20, 20, 20, "", 0, 0, 0, 0, 0, 0);
 		pause.addItem(scoreInMenu, pause);
 		pause.select(0);
-
-		scoreText = new updatableText(20,20,20,20, "B");
-		timeText = new updatableText(20,60,20,20, "A");
 		
+		win.addItem(new Scenes.SelectableText(20, 60, 20, 20, "Quit to Main Menu", 1, 0, 0, 0, 0, 0), menu);
+		win.addItem(new Scenes.SelectableText(20, 100, 20, 20, "Quit to Desktop", 1, 0, 0, 0, 0, 0), null);
+		win.addItem(new Scenes.SelectableText(250, 250, 40, 100, "A WINNER IS YOU!", 1, 0, 0, 0, 0, 0), win);
+		win.addItem(scoreInMenu, win);
+		win.addItem(timeInMenu, win);
+		pause.select(0);
+
+		scoreText = new updatableText(20,20,20,20, "");
+		timeText = new updatableText(20,60,20,20, "");
+		
+		//Game loop and setting initial scene
 		game.setScene(menu);
 		game.gameLoop();
 	}
@@ -72,7 +84,7 @@ public class SimpleGame extends Game implements Scene {
 			return game;
 		}
 	}
-	//This small class is a way to ensure that anything that needs to reset the game does.
+	//This small class is a way to ensure that anything that needs to resume the time does.
 	public static class resumeTime implements Scene{
 		SimpleGame game;
 		resumeTime(SimpleGame game){
@@ -83,6 +95,7 @@ public class SimpleGame extends Game implements Scene {
 			return game;
 		}
 	}
+	//Detects escape key to pause the game
 	public void onKeyEvent(int key, int scancode, int action, int mods){
 		//System.out.println("Key: " + key);
 		//System.out.println("Action: " + action);
@@ -90,7 +103,7 @@ public class SimpleGame extends Game implements Scene {
 			pauseGame = true;
 		}
 	}
-	
+	//Detects mouse clicks to incriment score
 	public void onMouseEvent(int button,int action, int mods){
 		//System.out.println("Button: "+button);
 		//System.out.println("Action: "+action);
@@ -99,7 +112,7 @@ public class SimpleGame extends Game implements Scene {
 			score++;
 		}		
 	}
-	
+	//Initializes game variables
 	private void init(){
 		glClearColor(1f, 1f, 1f, 1f);
 		start = System.nanoTime();
@@ -107,7 +120,7 @@ public class SimpleGame extends Game implements Scene {
 		// screen clear is black (this could go in drawFrame if you wanted it to change
 		score = 0;
 	}
-	
+	//Extends text so that it can get updated
 	private static class updatableText extends Text{
 		public updatableText(int x, int y, int w, int h, String text) {
 			super(x, y, w, h, text);
@@ -117,21 +130,30 @@ public class SimpleGame extends Game implements Scene {
 			this.textArray = text.split("");
 		}
 	}
-	
+	//Draws the frames
 	public Scene drawFrame(int delta) {
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the frame buffer
+		//Calculating time in seconds
 		time = (int) ((System.nanoTime() - start)/ 1000000000l + elasped);
+		//if the puase game flag was thrown, pause the game.
 		if (pauseGame){
 			pauseGame = false;
+			//Preparing pause menu and time stopping
 			scoreInMenu.setLabel("Score: "+score);
 			elasped = time;
 			return pause; 
 		}
+		//Drawing text labels
 		scoreText.setLabel("Score: "+score);
 		scoreText.draw();
 		timeText.setLabel("Time: "+time);
 		timeText.draw();
-        if (score > 5){
+		//Win condition
+        if (score >= 5){
+        	//Preparing win screen
+			scoreInMenu.setLabel("Score: "+score);
+			timeInMenu.setLabel("Time: "+time);
+			return win;
         }
 		return this;
 	}

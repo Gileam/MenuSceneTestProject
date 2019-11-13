@@ -38,6 +38,7 @@ public class Scenes {
 		{
 			this.setColor(activeR, activeG, activeB);
 		}
+		//New method sets the label to new value
 		public void setLabel(String label){
 			this.textArray = label.split("");
 		}
@@ -66,7 +67,7 @@ public class Scenes {
 		private LinkedList<Item> items;
 		private int selected;
 		private boolean go=false;
-	
+		//Added background color defaults
 		public MainMenu(float backgroundR, float backgroundG, float backgroundB)
 		{
 			this.backgroundR = backgroundR;
