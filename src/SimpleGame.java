@@ -1,33 +1,29 @@
 import edu.utc.game.Game;
-import edu.utc.game.GameObject;
 
 import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.glClear;
 import static org.lwjgl.opengl.GL11.glClearColor;
 
-import java.awt.Rectangle;
-import java.util.Iterator;
-import java.util.List;
-
-import org.lwjgl.glfw.GLFW;
-import org.lwjgl.glfw.GLFWMouseButtonCallback;
-import org.lwjgl.opengl.GL11;
-
-//import MouseGame.Box;
-//import MouseGame.Bullet;
 import edu.utc.game.Scene;
-import edu.utc.game.SimpleMenu;
-import edu.utc.game.XYPair;
+import edu.utc.game.Sound;
+import edu.utc.game.Text;
 
 public class SimpleGame extends Game implements Scene {
+	//Game Objects
+	static int score;
+	static int time;
+	static long start;
+	static long elasped = 0;
+	boolean pauseGame = false;
+	//Scenes
+	static Scenes.MainMenu menu = new Scenes.MainMenu(1,1,1);
+	static Scenes.MainMenu pause = new Scenes.MainMenu(1,1,1);
+	static Scenes.SelectableText scoreInMenu = null;
+	static updatableText scoreText = null;
+	static updatableText timeText = null;
 	
-	//private static java.util.Random rand=new java.util.Random();
-	private boolean gotClick=false;
-	// private List<Box> boxes;
-	//private Box currBox;
-	
-	public static void main(String [] arg)
+	public static void main(String[] args)
 	{
 	
 		// construct a DemoGame object and launch the game loop
@@ -36,100 +32,108 @@ public class SimpleGame extends Game implements Scene {
 	
 		SimpleGame game=new SimpleGame();
 		game.registerGlobalCallbacks();
+		
+		initScene launcher = new initScene(game);
+		resumeTime timer = new resumeTime(game);
+		
+		menu.addItem(new Scenes.SelectableText(20, 20, 20, 20, "Launch Game", 1, 0, 0, 0, 0, 0), launcher);
+		menu.addItem(new Scenes.SelectableText(20, 60, 20, 20, "Exit", 1, 0, 0, 0, 0, 0), null);
+		menu.select(0);
 
-		//SimpleMenu menu = new SimpleMenu();
-		//menu.addItem(new SimpleMenu.SelectableText(20, 20, 20, 20, "Launch Game", 1, 0, 0, 1, 1, 1), game);
-		//menu.addItem(new SimpleMenu.SelectableText(20, 60, 20, 20, "Exit", 1, 0, 0, 1, 1, 1), null);
-		//menu.select(0);
+		
+		pause.addItem(new Scenes.SelectableText(20, 20, 20, 20, "Resume", 1, 0, 0, 0, 0, 0), timer);
+		pause.addItem(new Scenes.SelectableText(20, 60, 20, 20, "Quit to Main Menu", 1, 0, 0, 0, 0, 0), menu);
+		pause.addItem(new Scenes.SelectableText(20, 100, 20, 20, "Quit to Desktop", 1, 0, 0, 0, 0, 0), null);
+		scoreInMenu = new Scenes.SelectableText(500, 20, 20, 20, "", 0, 0, 0, 0, 0, 0);
+		pause.addItem(scoreInMenu, pause);
+		pause.select(0);
 
-		//game.setScene(menu);
+		scoreText = new updatableText(20,20,20,20, "B");
+		timeText = new updatableText(20,60,20,20, "A");
+		
+		game.setScene(menu);
 		game.gameLoop();
 	}
 
-	
-	// DemoGame instance data
-	
-	//List<GameObject> targets;
-	//Player player;
-	int GotClicks=0;
 	public SimpleGame()
 	{
-		initUI(640,480,"Simple Game");
-    	GL11.glClearColor(1,1,1,0);
-    	int GotClicks=0;
-    	//boxes = new java.util.LinkedList<Box>();
-		//currBox = new Box();
-    	//bullets=new java.util.LinkedList<Bullet>();
-    	Game.ui.showMouseCursor(true);
-    	GLFW.glfwSetMouseButtonCallback(Game.ui.getWindow(), 
-				new GLFWMouseButtonCallback()
-				{
-					public void invoke(long window, int button, int action, int mods)
-					{
-						if (button==1 && action==GLFW.GLFW_PRESS)
-						{
-							
-							gotClick=true;
-							
-							if(GotClicks>=5)
-							{
-								//System.out.println("test");
-							}
-							
-					
-						}
-					}
-			
-				});
-		
+		// inherited from the Game class, this sets up the window and allows us to access
+		// Game.ui
+		initUI(640, 480, "DemoGame");
 	}
-		
-	long start = System.nanoTime();
-	public Scene drawFrame(int delta) 
-	{
-		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-        
-        
-        if (gotClick)
-		{
-			System.out.println("detected a click event"); //checks if the mouse if clicked
-			gotClick=false;
-			long finish = System.nanoTime();
-			long timeElapsed = finish - start;
-			System.out.println(timeElapsed);
-			GotClicks++;
-			if(GotClicks>=5)
-			{
-				System.out.println("Win");
-			}
-			
+	//This small class is a way to ensure that anything that needs to reset the game does.
+	public static class initScene implements Scene{
+		SimpleGame game;
+		initScene(SimpleGame game){
+			this.game = game;
 		}
-        
-		
-        return this;
-    }
+		public Scene drawFrame(int delta) {
+			game.init();
+			return game;
+		}
+	}
+	//This small class is a way to ensure that anything that needs to reset the game does.
+	public static class resumeTime implements Scene{
+		SimpleGame game;
+		resumeTime(SimpleGame game){
+			this.game = game;
+		}
+		public Scene drawFrame(int delta) {
+			start = System.nanoTime();
+			return game;
+		}
+	}
+	public void onKeyEvent(int key, int scancode, int action, int mods){
+		//System.out.println("Key: " + key);
+		//System.out.println("Action: " + action);
+		if(key== 256 && action == 1){
+			pauseGame = true;
+		}
+	}
 	
-	
-	
-	public void onMouseEvent(int button,int action, int mods)
-	{
+	public void onMouseEvent(int button,int action, int mods){
 		//System.out.println("Button: "+button);
 		//System.out.println("Action: "+action);
 		if (button==0 && action==1)
 		{
-			
-			gotClick=true;
-			
-			if(GotClicks>=5)
-			{
-				System.out.println("test");
-			}
-		}
-			
+			score++;
+		}		
 	}
 	
+	private void init(){
+		glClearColor(1f, 1f, 1f, 1f);
+		start = System.nanoTime();
+		elasped = 0;
+		// screen clear is black (this could go in drawFrame if you wanted it to change
+		score = 0;
+	}
 	
+	private static class updatableText extends Text{
+		public updatableText(int x, int y, int w, int h, String text) {
+			super(x, y, w, h, text);
+			this.setColor(0f, 0f, 0f);
+		}
+		public void setLabel(String text){
+			this.textArray = text.split("");
+		}
+	}
 	
+	public Scene drawFrame(int delta) {
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
+		time = (int) ((System.nanoTime() - start)/ 1000000000l + elasped);
+		if (pauseGame){
+			pauseGame = false;
+			scoreInMenu.setLabel("Score: "+score);
+			elasped = time;
+			return pause; 
+		}
+		scoreText.setLabel("Score: "+score);
+		scoreText.draw();
+		timeText.setLabel("Time: "+time);
+		timeText.draw();
+        if (score > 5){
+        }
+		return this;
+	}
+
 }
-	
-	
