@@ -28,6 +28,9 @@ public class SimpleGame extends Game implements Scene {
 	//Objects display text in main game.
 	static updatableText scoreText = null;
 	static updatableText timeText = null;
+	Sound chirp;
+	Sound victory;
+	Sound click;
 	
 	public static void main(String[] args)
 	{
@@ -72,6 +75,9 @@ public class SimpleGame extends Game implements Scene {
 		// inherited from the Game class, this sets up the window and allows us to access
 		// Game.ui
 		initUI(640, 480, "DemoGame");
+		chirp=new Sound("res/chirping.wav");
+		click=new Sound("res/click.wav");
+		victory=new Sound("res/victory_music.wav");
 	}
 	//This small class is a way to ensure that anything that needs to reset the game does.
 	public static class initScene implements Scene{
@@ -109,6 +115,7 @@ public class SimpleGame extends Game implements Scene {
 		//System.out.println("Action: "+action);
 		if (button==0 && action==1)
 		{
+			click.play();
 			score++;
 		}		
 	}
@@ -139,6 +146,7 @@ public class SimpleGame extends Game implements Scene {
 		if (pauseGame){
 			pauseGame = false;
 			//Preparing pause menu and time stopping
+			chirp.play();
 			scoreInMenu.setLabel("Score: "+score);
 			elasped = time;
 			return pause; 
@@ -151,6 +159,7 @@ public class SimpleGame extends Game implements Scene {
 		//Win condition
         if (score >= 5){
         	//Preparing win screen
+        	victory.play();
 			scoreInMenu.setLabel("Score: "+score);
 			timeInMenu.setLabel("Time: "+time);
 			return win;
